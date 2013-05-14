@@ -4,7 +4,6 @@
 		<title>Octree test</title>
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
-		<link href="styles/menu.css" media="all" rel="stylesheet" type="text/css" />
 		<style>
 			body {
 				font-family: Monospace;
@@ -36,6 +35,36 @@
 				camera.updateProjectionMatrix();
 
 				renderer.setSize( window.innerWidth, window.innerHeight );
+			}
+
+			var mouse2D = new THREE.Vector2();
+			var magnitude = 1000;
+			var mousedown = false;
+			function onDocumentMouseDown(event) {
+				event.preventDefault();
+				mousedown = true;
+				mouse2D = new THREE.Vector2( ( event.clientX / window.innerWidth ) * 2 - 1,  - ( event.clientY / window.innerHeight ) * 2 + 1 );
+			}
+			function onDocumentMouseUp(event) {
+				event.preventDefault();
+				mousedown = false;
+			}
+			function onDocumentMouseMove(event) {
+				event.preventDefault();
+				if(mousedown)
+				{
+					var currentMouse2D = new THREE.Vector2( ( event.clientX / window.innerWidth ) * 2 - 1,  - ( event.clientY / window.innerHeight ) * 2 + 1 );
+				
+					var diff = ((new THREE.Vector2()).subVectors(mouse2D,currentMouse2D)).x;
+
+					var q = new THREE.Quaternion();
+					q.setFromAxisAngle(new THREE.Vector3( 0, 1, 0 ), (magnitude*diff/window.innerWidth)*2*Math.PI);
+					camera.position.applyQuaternion(q);
+
+					camera.lookAt(target);
+
+					mouse2D = currentMouse2D;
+				}
 			}
 
 			function init() {
@@ -106,6 +135,9 @@
 				//
 
 				window.addEventListener( 'resize', onWindowResize, false );
+				document.addEventListener( 'mousemove', onDocumentMouseMove, false );
+				document.addEventListener( 'mousedown', onDocumentMouseDown, false );
+				document.addEventListener( 'mouseup', onDocumentMouseUp, false );
 			}
 
 
