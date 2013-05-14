@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title>Octree test</title>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+		<link href="styles/menu.css" media="all" rel="stylesheet" type="text/css" />
+		<style>
+			body {
+				font-family: Monospace;
+				background-color: #f0f0f0;
+				margin: 0px;
+				overflow: hidden;
+			}
+		</style>
+	</head>
+	<body>
+		<script src="libs/three.min.js"></script>
+		<script src="libs/stats.min.js"></script>
+		
+		<script src="octree.js"></script>
+		
+
+		<script>
+			function createSphere(x,y,z) {
+				var geo = new THREE.SphereGeometry( 10, 20, 20 );
+				var material = new THREE.MeshPhongMaterial( { ambient: 0x0, color: 0x2C590A, specular: 0x990000, shininess: 30 } );//new THREE.MeshBasicMaterial( { color:0x2C590A, wireframe: false, opacity: 0.5 } );
+				var sphere = new THREE.Mesh( geo, material );
+				sphere.position.set(x,y,z);
+				return sphere;
+			}	
+
+			function onWindowResize() {
+
+				camera.aspect = window.innerWidth / window.innerHeight;
+				camera.updateProjectionMatrix();
+
+				renderer.setSize( window.innerWidth, window.innerHeight );
+			}
+
+			function init() {
+
+				container = document.createElement( 'div' );
+				document.body.appendChild( container );
+
+				//
+
+				scene = new THREE.Scene();
+
+				camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 10000 );
+				camera.position.y = 800;
+				camera.position.x = 1400 * Math.sin( theta * Math.PI / 360 );
+				camera.position.z = 1400 * Math.cos( theta * Math.PI / 360 );
+				camera.useQuaternion = true;
+				camera.lookAt( target );
+
+				renderer = new THREE.WebGLRenderer();
+				renderer.setSize( window.innerWidth, window.innerHeight );
+
+				container.appendChild(renderer.domElement);
+
+				stats = new Stats();
+				stats.domElement.style.position = 'absolute';
+				stats.domElement.style.top = '0px';
+				container.appendChild( stats.domElement );
+
+				//
+
+				octree = new Octree(null, new THREE.Vector3(0,0,0), dim.x, dim.y, dim.z);
+				scene.add(octree.mesh);
+
+				for(var i = 0; i < 100; i++)
+				{
+					var sphere = createSphere((Math.random()-0.5)*dim.x*2, (Math.random()-0.5)*dim.y*2, (Math.random()-0.5)*dim.z*2);
+					
+					sphere.dir = new THREE.Vector3();			// for animating
+					sphere.changeFreq = Math.random() * 10000;	// for animating
+					sphere.timeAtLastChange = (new Date()).getTime();	// for animating
+
+					spheres.push(sphere);
+					octree.add(sphere);
+					scene.add(sphere);
+				}
+
+				//
+
+				// Lights
+
+				var ambientLight = new THREE.AmbientLight( 0x606060 );
+				scene.add( ambientLight );
+
+				var directionalLight = new THREE.DirectionalLight( 0xffffff );
+				directionalLight.position.x = Math.random() - 0.5;
+				directionalLight.position.y = Math.random() - 0.5;
+				directionalLight.position.z = Math.random() - 0.5;
+				directionalLight.position.normalize();
+				scene.add( directionalLight );
+
+				var directionalLight = new THREE.DirectionalLight( 0x808080 );
+				directionalLight.position.x = Math.random() - 0.5;
+				directionalLight.position.y = Math.random() - 0.5;
+				directionalLight.position.z = Math.random() - 0.5;
+				directionalLight.position.normalize();
+				scene.add( directionalLight );
+
+				//
+
+				window.addEventListener( 'resize', onWindowResize, false );
+			}
+
+
+			function animate() {
+				var now = (new Date()).getTime();
+
+				requestAnimationFrame( animate );
+
+				spheres.forEach(function(sphere){
+					var timeSinceLastChange = now - sphere.timeAtLastChange
+					if(timeSinceLastChange > sphere.changeFreq)
+					{
+						sphere.dir.set( Math.random() - 0.5, Math.random( ) - 0.5, Math.random() - 0.5 );
+						sphere.dir.normalize();
+						sphere.timeAtLastChange = (new Date()).getTime();
+					}
+					var pos = (new THREE.Vector3()).addVectors(sphere.position, sphere.dir);
+
+					if(octree.contains(pos))
+					{
+						sphere.position = pos;
+						octree.onEntityPoseChanged(sphere);
+					}
+					else
+					{
+						sphere.dir.set( Math.random() - 0.5, Math.random( ) - 0.5, Math.random() - 0.5 );
+					}
+						
+				});
+					
+				octree.update();
+
+				render();
+				stats.update();
+			}
+
+			function render() {
+				renderer.render( scene, camera );
+			}
+
+			var container, stats;
+			var camera, scene, renderer;
+			var octree;
+			var theta = 45;
+			target = new THREE.Vector3( 0, 0, 0 );
+			
+			var dim = {x: 500, y:500, z:500};
+			var spheres = new Array();
+
+			init();
+			
+			animate();
+
+		</script>
+
+	</body>
+</html>
