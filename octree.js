@@ -339,13 +339,16 @@ Octree.prototype.update = function() {
 		if(node._all_entities.length <= 1)
 		{
 			// remove the children from the leaves array and detach their mesh from parents
-			for(var i = 0; i < node.children_nodes.length; i++)
-			{
-				var idx = _this._leaves.indexOf(node.children_nodes[i]);
-				if( idx !== -1 )
-					_this._leaves.splice(idx, 1);
-				node.mesh.remove(node.children_nodes[i].mesh);
-			}
+			(function removeChildrenNodes(node) {
+				for(var i = 0; i < node.children_nodes.length; i++)
+				{
+					removeChildrenNodes(node.children_nodes[i]);
+					var idx = _this._leaves.indexOf(node.children_nodes[i]);
+					if( idx !== -1 )
+						_this._leaves.splice(idx, 1);
+					node.mesh.remove(node.children_nodes[i].mesh);
+				}
+			})(node);
 
 			node.needLeavesUpdate();
 			node.children_nodes.length = 0;
@@ -364,7 +367,6 @@ Octree.prototype.update = function() {
 	}
 
 	this._leaves.forEach( function(node){
-		// check if it has been removed by a previous prune
 		pruneUp(node);
 	});	
 };
