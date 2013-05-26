@@ -1,3 +1,7 @@
+/**
+ * @author Anthony Chansavang / http://github.com/achansavang
+ **/
+
 function Octree(parent, origin, halfwidth, halfheight, halfdepth) {
 	this.origin = origin;
 	this.halfwidth = halfwidth;
