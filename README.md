@@ -3,7 +3,7 @@ jsOctree
 
 A Javascript octree using threejs.
 
-[Click here](http://htmlpreview.github.io/?https://github.com/achansavang/jsOctree/blob/master/octree_example.html) to view the example.
+[Click here](http://mochapanda.com/jsOctree/octree_example.html) to view the example.
 
 This octree uses [threejs](http://threejs.org/), but could easily be modified to use your own WebGL wrapper (the only thing used are the Vector classes and Mesh for visualization).
 
